@@ -1,0 +1,1289 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gernikaland Stars - Gestión Capitanes (v4.1.1)</title>
+  <!-- PWA: permite instalar como app en Android/iOS -->
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Gernikaland" />
+  <meta name="application-name" content="Gernikaland Stars" />
+  <meta name="theme-color" content="#1f2937" />
+  <link rel="manifest" href="data:application/json,{
+    &quot;name&quot;:&quot;Gernikaland Stars&quot;,
+    &quot;short_name&quot;:&quot;Gernikaland&quot;,
+    &quot;start_url&quot;:&quot;.&quot;,
+    &quot;display&quot;:&quot;standalone&quot;,
+    &quot;background_color&quot;:&quot;%231f2937&quot;,
+    &quot;theme_color&quot;:&quot;%231f2937&quot;,
+    &quot;icons&quot;:[{&quot;src&quot;:&quot;https://raw.githubusercontent.com/googlesamples/web-fundamentals/gh-pages/fundamentals/web/fundamentals/design-and-ux/browser-customization/images/icons-192.png&quot;,&quot;sizes&quot;:&quot;192x192&quot;,&quot;type&quot;:&quot;image/png&quot;}]
+  }" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+  <style>
+    .tab-active { background: #059669; color: white; }
+    select.disp-disponible { background-color:#dcfce7; border-color:#22c55e; color:#166534; font-weight:600; }
+    select.disp-no-disponible { background-color:#fee2e2; border-color:#ef4444; color:#991b1b; font-weight:600; }
+    select.disp-sin-respuesta { background-color:#f3f4f6; border-color:#d1d5db; color:#6b7280; }
+    .badge-conv { margin-left:0.5rem; display:inline-block; font-size:10px; padding:2px 6px; border-radius:9999px; background:#059669; color:#fff; vertical-align:middle; }
+    .racha-0 { background-color:#f0fdf4; color:#166534; }
+    .racha-1 { background-color:#fef3c7; color:#92400e; }
+    .racha-2 { background-color:#fed7aa; color:#9a3412; font-weight:600; }
+    .racha-3 { background-color:#fca5a5; color:#991b1b; font-weight:700; }
+    .racha-4 { background-color:#f87171; color:#7f1d1d; font-weight:700; }
+    .racha-5-plus { background-color:#dc2626; color:white; font-weight:700; }
+    .pts-ranking { display:inline-block; font-size:11px; padding:2px 7px; border-radius:9999px; background:#dbeafe; color:#1e40af; font-weight:700; vertical-align:middle; margin-left:4px; }
+    .pista-ok    { border-color:#22c55e !important; }
+    .pista-error { border-color:#ef4444 !important; background-color:#fef2f2 !important; }
+    .orden-badge { font-size:11px; padding:2px 8px; border-radius:9999px; font-weight:700; }
+    .orden-ok    { background:#dcfce7; color:#166534; }
+    .orden-error { background:#fee2e2; color:#991b1b; }
+    .ficha-jornada { background:linear-gradient(135deg,#f0fdf4 0%,#dcfce7 100%); border:2px solid #22c55e; border-radius:12px; padding:14px 18px; margin-bottom:18px; }
+    .badge-casa { background:#dbeafe; color:#1e40af; padding:2px 10px; border-radius:9999px; font-size:12px; font-weight:700; }
+    .badge-fuera { background:#fef3c7; color:#92400e; padding:2px 10px; border-radius:9999px; font-size:12px; font-weight:700; }
+    /* Tipo badges para partidos */
+    .tipo-liga { background:#dcfce7; color:#166534; }
+    .tipo-copa { background:#e0e7ff; color:#3730a3; }
+    .tipo-playoff { background:#fce7f3; color:#9d174d; }
+    .tipo-vuelta1 { background:#dcfce7; color:#166534; }
+    .tipo-reto { background:#fef3c7; color:#92400e; }
+    .tipo-vuelta2 { background:#dbeafe; color:#1e40af; }
+    .tipo-final { background:#fce7f3; color:#9d174d; }
+    .tipo-badge { font-size:10px; font-weight:700; padding:1px 7px; border-radius:9999px; display:inline-block; }
+    .partido-row { border-left:3px solid #e5e7eb; transition:border-color 0.15s; }
+    .partido-row:hover { border-left-color:#059669; }
+  </style>
+</head>
+<body class="bg-gray-100">
+  <!-- HEADER -->
+  <div class="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 text-white shadow-xl" style="border-bottom:3px solid #c9a84c;">
+    <div class="container mx-auto px-4 py-3 flex items-center gap-4">
+      <img src="data:image/jpeg;base64,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" alt="Gernikaland Stars" class="h-16 w-auto flex-shrink-0" style="filter:drop-shadow(0 2px 8px rgba(201,168,76,0.5));" />
+      <div class="flex-1 min-w-0">
+        <div class="flex items-baseline gap-2 flex-wrap">
+          <span class="text-2xl md:text-3xl font-black tracking-wide" style="color:#c9a84c;text-shadow:0 1px 6px rgba(0,0,0,0.5);">GERNIKALAND STARS</span>
+          <span class="text-sm font-semibold tracking-widest uppercase opacity-70" style="color:#e5d9b6;">Padel Club</span>
+        </div>
+        <div class="text-xs md:text-sm opacity-80 mt-0.5 tracking-wide">🎾 Gestión de Capitanes</div>
+        <div id="firebase-status" class="text-xs mt-0.5 hidden" style="color:#86efac;">⏳ Cargando datos...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TABS -->
+  <div class="bg-white shadow sticky top-0 z-10">
+    <div class="container mx-auto px-4">
+      <div id="tabs-bar" class="flex overflow-x-auto">
+        <button id="tab-equipo" class="tab-active px-4 md:px-6 py-3 font-semibold whitespace-nowrap text-sm md:text-base">👥 Equipo</button>
+        <button id="tab-disponibilidad" class="px-4 md:px-6 py-3 font-semibold hover:bg-gray-100 whitespace-nowrap text-sm md:text-base">📋 Disponibilidad</button>
+        <button id="tab-convocatoria" class="px-4 md:px-6 py-3 font-semibold hover:bg-gray-100 whitespace-nowrap text-sm md:text-base">🎯 Convocatoria</button>
+        <button id="tab-estadisticas" class="px-4 md:px-6 py-3 font-semibold hover:bg-gray-100 whitespace-nowrap text-sm md:text-base">📊 Estadísticas</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="container mx-auto px-4 py-4 md:py-6">
+
+    <!-- ===== EQUIPO ===== -->
+    <div id="content-equipo" class="tab-content">
+      <div class="bg-white rounded-lg shadow-lg p-4 md:p-6">
+        <h2 class="text-xl md:text-2xl font-bold mb-4">Gestión del Equipo</h2>
+
+        <!-- Campeonatos activos -->
+        <div class="bg-emerald-50 rounded-lg p-4 mb-6 border-2 border-emerald-200">
+          <h3 class="font-bold mb-2">⚙️ Campeonatos activos</h3>
+          <div class="flex gap-6 items-center">
+            <label class="inline-flex items-center gap-2"><input type="checkbox" id="chk-lv" class="w-4 h-4"><span>Liga Vasca</span></label>
+            <label class="inline-flex items-center gap-2"><input type="checkbox" id="chk-series" class="w-4 h-4"><span>Series</span></label>
+          </div>
+          <p class="text-xs text-gray-500 mt-2">Los cambios se guardan automáticamente.</p>
+        </div>
+
+        <!-- Gestión de partidos -->
+        <div class="bg-purple-50 rounded-lg p-4 mb-6 border-2 border-purple-200">
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="font-bold">🗓️ Partidos</h3>
+            <button id="btn-toggle-partidos" class="text-sm bg-purple-600 hover:bg-purple-700 text-white px-3 py-1 rounded">Mostrar/Ocultar</button>
+          </div>
+          <p class="text-sm text-gray-600 mb-1">Añade y gestiona todos los partidos de la temporada. Cada partido tiene tipo, nombre, fecha, rival y localía.</p>
+          <div id="partidos-wrapper" class="hidden mt-4">
+            <!-- Añadir partido -->
+            <div class="bg-white rounded-lg border p-3 mb-4">
+              <h4 class="font-semibold text-sm mb-2">➕ Nuevo partido</h4>
+              <div class="grid grid-cols-2 md:grid-cols-3 gap-2 mb-2">
+                <div>
+                  <label class="text-xs text-gray-500 block mb-1">Competición</label>
+                  <select id="nuevo-partido-comp" class="w-full px-2 py-1.5 border rounded text-sm"></select>
+                </div>
+                <div>
+                  <label class="text-xs text-gray-500 block mb-1">Tipo</label>
+                  <select id="nuevo-partido-tipo" class="w-full px-2 py-1.5 border rounded text-sm"></select>
+                </div>
+                <div>
+                  <label class="text-xs text-gray-500 block mb-1">Etiqueta (ej: "Jornada 3", "Copa - Cuartos")</label>
+                  <input type="text" id="nuevo-partido-label" placeholder="Nombre del partido..." class="w-full px-2 py-1.5 border rounded text-sm" />
+                </div>
+                <div>
+                  <label class="text-xs text-gray-500 block mb-1">Fecha</label>
+                  <input type="date" id="nuevo-partido-fecha" class="w-full px-2 py-1.5 border rounded text-sm" />
+                </div>
+                <div>
+                  <label class="text-xs text-gray-500 block mb-1">Rival</label>
+                  <input type="text" id="nuevo-partido-rival" placeholder="Nombre del rival..." class="w-full px-2 py-1.5 border rounded text-sm" />
+                </div>
+                <div>
+                  <label class="text-xs text-gray-500 block mb-1">¿Casa o Fuera?</label>
+                  <select id="nuevo-partido-loc" class="w-full px-2 py-1.5 border rounded text-sm">
+                    <option value="">— Sin definir —</option>
+                    <option value="Casa">🏠 Casa</option>
+                    <option value="Fuera">🚌 Fuera</option>
+                  </select>
+                </div>
+              </div>
+              <button id="btn-add-partido" class="bg-purple-600 hover:bg-purple-700 text-white text-sm font-semibold px-4 py-2 rounded">Añadir partido</button>
+            </div>
+            <!-- Lista de partidos por competición -->
+            <div class="grid md:grid-cols-2 gap-4">
+              <div class="bg-white rounded-lg border p-3">
+                <h4 class="font-semibold mb-3 text-emerald-700">⚽ Liga Vasca</h4>
+                <div id="lista-partidos-lv" class="space-y-1"></div>
+              </div>
+              <div class="bg-white rounded-lg border p-3">
+                <h4 class="font-semibold mb-3 text-blue-700">⚽ Series</h4>
+                <div id="lista-partidos-series" class="space-y-1"></div>
+              </div>
+            </div>
+            <p class="text-xs text-gray-500 mt-3">💡 Los partidos se ordenan automáticamente por fecha. Los cambios se guardan en tiempo real.</p>
+          </div>
+        </div>
+
+        <!-- Jugadores -->
+        <div id="load-initial-helper" class="bg-yellow-50 border-2 border-yellow-300 rounded-lg p-4 mb-4 hidden">
+          <p class="font-semibold mb-2">⚠️ No hay jugadores en el equipo</p>
+          <p class="text-sm mb-3">¿Quieres cargar los 28 jugadores iniciales?</p>
+          <button id="btn-load-initial" class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold px-4 py-2 rounded">Cargar Jugadores Iniciales</button>
+        </div>
+
+        <div class="bg-blue-50 rounded-lg p-4 mb-6 border-2 border-blue-200">
+          <h3 class="font-bold mb-3">➕ Añadir Nuevo Jugador</h3>
+          <div class="grid md:grid-cols-3 gap-3">
+            <input type="text" id="nuevo-nombre" placeholder="Nombre" class="px-4 py-2 border-2 rounded-lg" />
+            <input type="text" id="nuevo-apellidos" placeholder="Apellidos" class="px-4 py-2 border-2 rounded-lg" />
+            <button id="btn-add-player" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 rounded-lg">Añadir Jugador</button>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead class="bg-emerald-600 text-white">
+              <tr>
+                <th class="px-4 py-3 text-left">Jugador</th>
+                <th class="px-4 py-3 text-center" title="Puntos ranking Liga Vasca">🏆 Pts LV</th>
+                <th class="px-4 py-3 text-center" title="Puntos ranking Series">🏆 Pts Series</th>
+                <th class="px-4 py-3 text-center">Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="equipo-tbody"></tbody>
+          </table>
+        </div>
+        <p class="text-xs text-gray-500 mt-2">💡 Edita los puntos de ranking directamente en la tabla. Se guardan automáticamente.</p>
+      </div>
+
+      <!-- Modal editar jugador -->
+      <div id="edit-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-lg p-6 max-w-md w-full">
+          <h3 class="text-xl font-bold mb-4">✏️ Editar Jugador</h3>
+          <div class="space-y-3">
+            <div><label class="block font-semibold mb-1">Nombre:</label><input type="text" id="edit-nombre" class="w-full px-4 py-2 border-2 rounded-lg" /></div>
+            <div><label class="block font-semibold mb-1">Apellidos:</label><input type="text" id="edit-apellidos" class="w-full px-4 py-2 border-2 rounded-lg" /></div>
+          </div>
+          <div class="flex gap-3 mt-6">
+            <button id="btn-cancel-edit" class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 font-bold py-2 rounded-lg">Cancelar</button>
+            <button id="btn-save-edit" class="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-2 rounded-lg">Guardar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== DISPONIBILIDAD ===== -->
+    <div id="content-disponibilidad" class="tab-content hidden">
+      <div class="bg-white rounded-lg shadow-lg p-4 md:p-6">
+        <h2 class="text-xl md:text-2xl font-bold mb-4">Marcar Disponibilidad</h2>
+        <p class="text-sm text-gray-600 mb-4">Marca lo que los jugadores han respondido en WhatsApp</p>
+        <div class="grid md:grid-cols-2 gap-4 mb-6">
+          <div id="disp-comp-wrapper">
+            <label class="block font-semibold mb-2">Competición:</label>
+            <select id="disp-comp" class="w-full px-4 py-2 border-2 rounded-lg" onchange="loadDisponibilidadTable()"></select>
+          </div>
+        </div>
+        <div class="overflow-x-auto" style="position:relative;">
+          <table class="w-full text-sm border-collapse">
+            <thead class="bg-emerald-600 text-white" id="disp-thead" style="position:sticky;top:0;z-index:5;"></thead>
+            <tbody id="disp-tbody"></tbody>
+          </table>
+        </div>
+        <p class="text-xs text-gray-500 mt-2">💡 Desliza para ver todos los partidos → Los cambios se guardan automáticamente</p>
+      </div>
+    </div>
+
+    <!-- ===== CONVOCATORIA ===== -->
+    <div id="content-convocatoria" class="tab-content hidden">
+      <div class="bg-white rounded-lg shadow-lg p-4 md:p-6 mb-4">
+        <h2 class="text-xl md:text-2xl font-bold mb-4">Hacer Convocatoria</h2>
+
+        <!-- Ficha del partido -->
+        <div id="ficha-jornada" class="ficha-jornada hidden">
+          <div class="flex flex-wrap items-center gap-4">
+            <div class="text-sm text-gray-600">📅 Fecha: <span id="ficha-fecha" class="font-bold text-emerald-800">—</span></div>
+            <div class="text-sm text-gray-600">🆚 Rival: <span id="ficha-rival" class="font-bold text-emerald-800">—</span></div>
+            <div class="text-sm text-gray-600">📍 <span id="ficha-localidad"></span></div>
+          </div>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-4 mb-4">
+          <div id="conv-comp-wrapper">
+            <label class="block font-semibold mb-2">Competición:</label>
+            <select id="conv-comp" class="w-full px-4 py-2 border-2 rounded-lg" onchange="onConvCompChange()"></select>
+          </div>
+          <div>
+            <label class="block font-semibold mb-2">Partido:</label>
+            <select id="conv-partido" class="w-full px-4 py-2 border-2 rounded-lg" onchange="loadJornadaConvocatoria()"></select>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-3 mb-4">
+          <label class="inline-flex items-center gap-2 text-sm text-gray-700">
+            <input type="checkbox" id="chk-ocultar-conv" class="w-4 h-4" />
+            <span>Ocultar ya convocados en la lista</span>
+          </label>
+        </div>
+
+        <!-- Jugadores disponibles -->
+        <div class="mb-6">
+          <h3 class="font-bold text-lg mb-3">Jugadores Disponibles:</h3>
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead class="bg-gray-200">
+                <tr>
+                  <th class="px-3 py-2 text-left">Jugador</th>
+                  <th class="px-3 py-2 text-center" title="Puntos de ranking">Pts</th>
+                  <th class="px-3 py-2 text-center" title="Disponible (este campeonato)">Disp.</th>
+                  <th class="px-3 py-2 text-center" title="Jugados (este campeonato)">Jug.</th>
+                  <th class="px-3 py-2 text-center" title="Ganados (este campeonato)">Gan.</th>
+                  <th class="px-3 py-2 text-center" title="Racha sin jugar (este campeonato)">R.SJ</th>
+                  <th class="px-3 py-2 text-center" title="Racha disponible sin jugar (este campeonato)">R.DSJ</th>
+                  <th class="px-3 py-2 text-center" title="Disponible total (ambos campeonatos)">Disp.(T)</th>
+                  <th class="px-3 py-2 text-center" title="Jugados total (ambos campeonatos)">Jug.(T)</th>
+                  <th class="px-3 py-2 text-center" title="Ganados total (ambos campeonatos)">Gan.(T)</th>
+                  <th class="px-3 py-2 text-center" title="Racha sin jugar (ambos campeonatos)">R.SJ(T)</th>
+                  <th class="px-3 py-2 text-center" title="Racha disponible sin jugar (ambos campeonatos)">R.DSJ(T)</th>
+                </tr>
+              </thead>
+              <tbody id="available-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Pistas -->
+        <div class="mb-6">
+          <h3 class="font-bold text-lg mb-3">Asignación de Pistas:</h3>
+          <template id="pista-template">
+            <div class="pista border-2 rounded-lg p-3 mt-3">
+              <div class="flex justify-between items-center mb-2">
+                <h4 class="font-bold flex items-center gap-2 flex-wrap">
+                  <span><span class="emoji">🎾</span> <span class="titulo"></span></span>
+                  <span class="text-xs text-gray-400 font-normal puntos-vic"></span>
+                  <span class="suma-pts hidden text-xs font-semibold bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full border border-amber-300"></span>
+                </h4>
+                <div class="flex items-center gap-2">
+                  <span class="orden-badge hidden"></span>
+                  <select class="resultado px-2 py-1 border rounded text-sm">
+                    <option value="">Pendiente</option><option value="G">✓ Ganado</option><option value="P">✗ Perdido</option>
+                  </select>
+                </div>
+              </div>
+              <div class="grid grid-cols-2 gap-2">
+                <select class="j1 px-2 py-2 border rounded text-sm"><option value="">Jugador 1...</option></select>
+                <select class="j2 px-2 py-2 border rounded text-sm"><option value="">Jugador 2...</option></select>
+              </div>
+            </div>
+          </template>
+          <div id="pistas-container"></div>
+        </div>
+
+        <div class="flex items-center gap-3 mb-3">
+          <button onclick="forzarOrdenPistas()" class="bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold px-4 py-2 rounded-lg">🔀 Reordenar pistas por ranking</button>
+          <span class="text-xs text-gray-500">Ordena las parejas completas de mayor a menor puntuación</span>
+        </div>
+        <div id="orden-pistas-resumen" class="hidden mb-3 p-3 rounded-lg border text-sm"></div>
+        <p class="text-xs text-gray-500 mb-3">💡 Los cambios se guardan automáticamente.</p>
+
+        <div class="bg-gray-100 rounded-lg p-4 mb-6">
+          <h3 class="font-bold text-center mb-2">Resultado de la Jornada:</h3>
+          <div class="text-4xl font-bold text-center">
+            <span id="resultado-favor" class="text-green-600">0</span> - <span id="resultado-contra" class="text-red-600">0</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== ESTADÍSTICAS ===== -->
+    <div id="content-estadisticas" class="tab-content hidden">
+      <div class="bg-white rounded-lg shadow-lg p-4 md:p-6">
+        <h2 class="text-xl md:text-2xl font-bold mb-4">Estadísticas de Jugadores</h2>
+        <div class="mb-4">
+          <label class="block font-semibold mb-2">Ver estadísticas de:</label>
+          <select id="stats-comp" class="w-full md:w-64 px-4 py-2 border-2 rounded-lg">
+            <option value="total">Total (Liga + Series)</option>
+            <option value="Liga Vasca">Liga Vasca</option>
+            <option value="Series">Series</option>
+          </select>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead class="bg-emerald-600 text-white">
+              <tr>
+                <th class="px-3 py-3 text-left">Jugador</th>
+                <th class="px-3 py-3 text-center">Disponible</th>
+                <th class="px-3 py-3 text-center">No Disp.</th>
+                <th class="px-3 py-3 text-center">Sin Resp.</th>
+                <th class="px-3 py-3 text-center">Jugados</th>
+                <th class="px-3 py-3 text-center">Ganados</th>
+                <th class="px-3 py-3 text-center">% Vict.</th>
+              </tr>
+            </thead>
+            <tbody id="stats-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /container -->
+
+  <script>
+  // ============================================================
+  // CONFIG + FIREBASE
+  // ============================================================
+  const USE_FIREBASE = true;
+  const firebaseConfig = {
+    apiKey: "AIzaSyAP10EzxPu2UPZLXhcZ10EQSH3AhHxYXRQ",
+    authDomain: "gernikaland-2026-27.firebaseapp.com",
+    databaseURL: "https://gernikaland-2026-27-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "gernikaland-2026-27",
+    storageBucket: "gernikaland-2026-27.firebasestorage.app",
+    messagingSenderId: "271037687090",
+    appId: "1:271037687090:web:9d75a93a9759465cf5232b"
+  };
+  let database=null, isFirebaseInitialized=false, isDataLoaded=false;
+  try{ if(USE_FIREBASE){ firebase.initializeApp(firebaseConfig); database=firebase.database(); isFirebaseInitialized=true; } }
+  catch(e){ console.warn('Firebase init',e); }
+
+  function syncToFirebase(path, value){ try{ if(isFirebaseInitialized&&database) database.ref(path).set(value).catch(console.error); }catch(e){ console.warn('sync',e); } }
+  // Serializar partidos a objeto keyed-by-id para Firebase (evita problemas con arrays y claves)
+  function partidosToFirebase(){
+    const out={};
+    ['Liga Vasca','Series'].forEach(comp=>{
+      const key=comp==='Liga Vasca'?'lv':'series';
+      out[key]={};
+      (partidos[comp]||[]).forEach(p=>{ out[key][p.id]=p; });
+    });
+    return out;
+  }
+  function syncPartidos(){ syncToFirebase('partidos', partidosToFirebase()); cacheSave(); }
+  function loadFromFirebase(cb){ if(isFirebaseInitialized&&database) database.ref('/').once('value').then(s=>cb(s.val())).catch(_=>cb(null)); else cb(null); }
+  function arrayify(obj){ if(Array.isArray(obj)) return obj; const a=[]; if(!obj) return a; Object.keys(obj).sort((a,b)=>+a - +b).forEach(k=>a.push(obj[k])); return a; }
+
+  // ============================================================
+  // CACHE LOCAL
+  // ============================================================
+  const CP='padelcap4_';
+  function cacheSave(){ try{ localStorage.setItem(CP+'players',JSON.stringify(players)); localStorage.setItem(CP+'data',JSON.stringify(data)); localStorage.setItem(CP+'settings',JSON.stringify(settings)); localStorage.setItem(CP+'partidos',JSON.stringify(partidos)); localStorage.setItem(CP+'ranking',JSON.stringify(ranking)); }catch(e){} }
+  function cacheLoad(){ try{ const p=localStorage.getItem(CP+'players'); if(p) players=JSON.parse(p); const d=localStorage.getItem(CP+'data'); if(d) Object.assign(data,JSON.parse(d)); const s=localStorage.getItem(CP+'settings'); if(s) Object.assign(settings,JSON.parse(s)); const pt=localStorage.getItem(CP+'partidos'); if(pt) Object.assign(partidos,JSON.parse(pt)); const r=localStorage.getItem(CP+'ranking'); if(r) Object.assign(ranking,JSON.parse(r)); }catch(e){} }
+
+  // ============================================================
+  // ESTADO GLOBAL
+  // ============================================================
+  let players = [];
+  const data = {
+    disponibilidad: {'Liga Vasca':{}, 'Series':{}},
+    convocatorias:  {'Liga Vasca':{}, 'Series':{}}
+  };
+  let settings = { competitions: {'Liga Vasca':true, 'Series':true} };
+  let ranking   = {'Liga Vasca':{}, 'Series':{}};
+
+  // partidos[comp] = array de objetos partido:
+  // { id, tipo, label, fecha, rival, localidad }
+  // id = string único generado al crear (ej: "lv_abc123")
+  let partidos = {'Liga Vasca':[], 'Series':[]};
+
+  // Tipos de partido por competición
+  const TIPOS = {
+    'Liga Vasca': [
+      {v:'Liga',    t:'Liga',     css:'tipo-liga'},
+      {v:'Copa',    t:'Copa',     css:'tipo-copa'},
+      {v:'Playoff', t:'Playoff',  css:'tipo-playoff'},
+    ],
+    'Series': [
+      {v:'1ª Vuelta', t:'1ª Vuelta', css:'tipo-vuelta1'},
+      {v:'Reto',      t:'Reto',      css:'tipo-reto'},
+      {v:'2ª Vuelta', t:'2ª Vuelta', css:'tipo-vuelta2'},
+      {v:'Final',     t:'Final',     css:'tipo-final'},
+      {v:'Playoff',   t:'Playoff',   css:'tipo-playoff'},
+    ]
+  };
+
+  function getTipoCss(comp, tipo){
+    const found = (TIPOS[comp]||[]).find(t=>t.v===tipo);
+    return found ? found.css : 'tipo-liga';
+  }
+
+  function genId(comp){
+    const prefix = comp==='Liga Vasca'?'lv':'se';
+    return `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2,6)}`;
+  }
+
+  // ============================================================
+  // HELPERS JUGADORES
+  // ============================================================
+  function getPlayerFullName(p){ return `${p.nombre} ${p.apellidos}`; }
+  function getPlayerDisplayName(p){ const a1=(p.apellidos||'').split(' ')[0]||''; return `${p.nombre} ${a1}`.trim(); }
+  function findPlayerByFullName(n){ return players.find(p=>getPlayerFullName(p)===n); }
+  let disponiblesActuales=[];
+
+  // ============================================================
+  // HELPERS PARTIDOS
+  // ============================================================
+  function getPartidosComp(comp){
+    const list = partidos[comp] || [];
+    // Ordenar por fecha (sin fecha al final), luego por orden de creación
+    return [...list].sort((a,b)=>{
+      if(!a.fecha && !b.fecha) return 0;
+      if(!a.fecha) return 1;
+      if(!b.fecha) return -1;
+      return a.fecha.localeCompare(b.fecha);
+    });
+  }
+
+  function getPartidoById(comp, id){
+    return (partidos[comp]||[]).find(p=>p.id===id);
+  }
+
+  function ensureConvPartido(comp, id){
+    if(!data.convocatorias[comp]) data.convocatorias[comp]={};
+    if(!data.convocatorias[comp][id]){
+      data.convocatorias[comp][id]={
+        pistas: Array.from({length:5},()=>[null,null]),
+        resultados: Array(5).fill(null)
+      };
+    }
+    const cv=data.convocatorias[comp][id];
+    if(!cv.pistas||!Array.isArray(cv.pistas)||cv.pistas.length!==5){
+      const old=cv.pistas||{};
+      cv.pistas=Array.from({length:5},(_,i)=>{ const p=old[i]||old[String(i)]; return Array.isArray(p)?p:[p&&p[0]||null,p&&p[1]||null]; });
+    }
+    if(!cv.resultados||!Array.isArray(cv.resultados)||cv.resultados.length!==5){
+      const old=cv.resultados||{};
+      cv.resultados=Array.from({length:5},(_,i)=>old[i]||old[String(i)]||null);
+    }
+  }
+
+  function ensureDispPartido(comp, id){
+    if(!data.disponibilidad[comp]) data.disponibilidad[comp]={};
+    if(!data.disponibilidad[comp][id]) data.disponibilidad[comp][id]={};
+  }
+
+  // ============================================================
+  // INIT
+  // ============================================================
+  function init(){
+    window.isLoading=true;
+    document.getElementById('firebase-status').classList.remove('hidden');
+    cacheLoad();
+
+    // Poblar selectores de competición inmediatamente (no esperar Firebase)
+    renderCompSelectors();
+
+    loadFromFirebase(db=>{
+      if(db){
+        if(db.players) players=arrayify(db.players);
+        if(db.data){
+          if(db.data.disponibilidad) data.disponibilidad=db.data.disponibilidad;
+          if(db.data.convocatorias)  data.convocatorias=db.data.convocatorias;
+        }
+        if(db.ranking)   Object.assign(ranking,db.ranking);
+        if(db.settings?.competitions) settings.competitions=db.settings.competitions;
+        if(db.partidos){
+          // Parsear con el mismo formato que el listener
+          const parseRaw = (raw) => {
+            if(!raw) return [];
+            if(Array.isArray(raw)) return raw.filter(Boolean);
+            const vals=Object.values(raw).filter(Boolean);
+            if(vals.length&&vals[0].id) return vals;
+            return arrayify(raw).filter(Boolean);
+          };
+          partidos['Liga Vasca'] = parseRaw(db.partidos['lv']||db.partidos['Liga Vasca']);
+          partidos['Series']     = parseRaw(db.partidos['series']||db.partidos['Series']);
+        }
+      }
+
+      enforceDefaults();
+      syncToFirebase('settings/competitions', settings.competitions);
+
+      ensurePlayersLoaded(()=>{
+        isDataLoaded=true;
+        document.getElementById('firebase-status').textContent='✅ Datos cargados';
+        setTimeout(()=>document.getElementById('firebase-status').classList.add('hidden'),1500);
+        loadEquipoTable();
+        applyCompetitionFilterToUI(true);
+        window.isLoading=false;
+        listenToFirebaseChanges();
+        cacheSave();
+      });
+    });
+
+    // Tabs
+    document.getElementById('tab-equipo').addEventListener('click',       ()=>showTab('equipo'));
+    document.getElementById('tab-disponibilidad').addEventListener('click',()=>showTab('disponibilidad'));
+    document.getElementById('tab-convocatoria').addEventListener('click',  ()=>showTab('convocatoria'));
+    document.getElementById('tab-estadisticas').addEventListener('click',  ()=>showTab('estadisticas'));
+
+    // Equipo
+    document.getElementById('btn-add-player').addEventListener('click', addPlayer);
+    document.getElementById('btn-cancel-edit').addEventListener('click', cancelEdit);
+    document.getElementById('btn-save-edit').addEventListener('click',   saveEdit);
+    document.getElementById('btn-load-initial')?.addEventListener('click', loadInitialPlayers);
+    document.getElementById('btn-add-partido').addEventListener('click', addPartido);
+
+    document.getElementById('stats-comp')?.addEventListener('change', loadEstadisticas);
+
+    showTab('equipo');
+  }
+
+  function enforceDefaults(){
+    if(!settings?.competitions) settings={competitions:{'Liga Vasca':true,'Series':true}};
+    const c=settings.competitions;
+    if(!c['Liga Vasca']&&!c['Series']) c['Liga Vasca']=true;
+    if(!partidos['Liga Vasca']) partidos['Liga Vasca']=[];
+    if(!partidos['Series'])     partidos['Series']=[];
+    if(!data.disponibilidad['Liga Vasca']) data.disponibilidad['Liga Vasca']={};
+    if(!data.disponibilidad['Series'])     data.disponibilidad['Series']={};
+    if(!data.convocatorias['Liga Vasca'])  data.convocatorias['Liga Vasca']={};
+    if(!data.convocatorias['Series'])      data.convocatorias['Series']={};
+    if(!ranking['Liga Vasca']) ranking['Liga Vasca']={};
+    if(!ranking['Series'])     ranking['Series']={};
+  }
+
+  function ensurePlayersLoaded(cb){
+    if(players&&players.length){ cb&&cb(); return; }
+    if(isFirebaseInitialized&&database){
+      database.ref('players').once('value').then(s=>{ const v=s.val(); if(v) players=arrayify(v); cb&&cb(); }).catch(_=>cb&&cb());
+    } else cb&&cb();
+  }
+
+  function listenToFirebaseChanges(){
+    if(!isFirebaseInitialized||!database) return;
+    database.ref('players').on('value', s=>{ if(s.val()){ players=arrayify(s.val()); cacheSave(); const t=activeTab(); if(t==='equipo') loadEquipoTable(); if(t==='disponibilidad') loadDisponibilidadTable(); } });
+    database.ref('data/disponibilidad').on('value', s=>{ if(s.val()) data.disponibilidad=s.val(); cacheSave(); if(activeTab()==='disponibilidad') loadDisponibilidadTable(); });
+    database.ref('data/convocatorias').on('value',  s=>{ if(s.val()) data.convocatorias=s.val(); cacheSave(); if(activeTab()==='convocatoria') loadJornadaConvocatoria(); });
+    database.ref('settings/competitions').on('value',s=>{ if(s.val()) settings.competitions=s.val(); enforceDefaults(); cacheSave(); renderCompSelectors(); applyCompetitionFilterToUI(true); });
+    database.ref('ranking').on('value', s=>{ if(s.val()) Object.assign(ranking,s.val()); cacheSave(); if(activeTab()==='equipo') loadEquipoTable(); if(activeTab()==='convocatoria') calcularOrdenPistas(); });
+    database.ref('partidos').on('value', s=>{
+      const val=s.val()||{};
+      // Formato nuevo: objeto keyed by id bajo 'lv' y 'series'
+      // Formato viejo (migración): arrays bajo 'Liga Vasca' y 'Series'
+      const parseLista = (raw) => {
+        if(!raw) return [];
+        if(Array.isArray(raw)) return raw.filter(Boolean);
+        const vals=Object.values(raw).filter(Boolean);
+        if(vals.length&&vals[0].id) return vals;
+        return arrayify(raw).filter(Boolean);
+      };
+      cacheSave();
+      if(activeTab()==='equipo') renderListaPartidos();
+      if(activeTab()==='disponibilidad') loadDisponibilidadTable();
+      if(activeTab()==='convocatoria'){ poblarSelectorPartidos(); loadJornadaConvocatoria(); }
+    });
+  }
+
+  function activeTab(){ return document.querySelector('.tab-active')?.id?.replace('tab-',''); }
+
+  // ============================================================
+  // TABS
+  // ============================================================
+  function renderCompSelectors(){
+    const comps=['Liga Vasca','Series'];
+    ['disp-comp','conv-comp'].forEach(id=>{
+      const sel=document.getElementById(id); if(!sel) return;
+      const cur=sel.value;
+      sel.innerHTML='';
+      comps.forEach(c=>{ const o=document.createElement('option'); o.value=c; o.textContent=c; sel.appendChild(o); });
+      if(cur&&comps.includes(cur)) sel.value=cur;
+    });
+    // Selector de tipo de nuevo partido
+    const compSel=document.getElementById('nuevo-partido-comp');
+    if(compSel){
+      compSel.innerHTML='';
+      comps.forEach(c=>{ const o=document.createElement('option'); o.value=c; o.textContent=c; compSel.appendChild(o); });
+      compSel.onchange=()=>renderTipoSelector();
+      renderTipoSelector();
+    }
+  }
+
+  function renderTipoSelector(){
+    const comp=document.getElementById('nuevo-partido-comp')?.value||'Liga Vasca';
+    const sel=document.getElementById('nuevo-partido-tipo'); if(!sel) return;
+    sel.innerHTML='';
+    (TIPOS[comp]||[]).forEach(t=>{ const o=document.createElement('option'); o.value=t.v; o.textContent=t.t; sel.appendChild(o); });
+  }
+
+  function applyCompetitionFilterToUI(forceReload=false){
+    const onlyLV=settings.competitions['Liga Vasca']&&!settings.competitions['Series'];
+    const onlySe=settings.competitions['Series']&&!settings.competitions['Liga Vasca'];
+    ['disp','conv'].forEach(prefix=>{
+      const wrap=document.getElementById(`${prefix}-comp-wrapper`);
+      const sel=document.getElementById(`${prefix}-comp`);
+      if(!wrap||!sel) return;
+      if(onlyLV){ sel.value='Liga Vasca'; wrap.classList.add('hidden'); }
+      else if(onlySe){ sel.value='Series'; wrap.classList.add('hidden'); }
+      else { wrap.classList.remove('hidden'); if(!sel.value) sel.value='Liga Vasca'; }
+    });
+    if(forceReload){ loadDisponibilidadTable(); poblarSelectorPartidos(); loadJornadaConvocatoria(); }
+  }
+
+  function showTab(tab){
+    document.querySelectorAll('.tab-content').forEach(el=>el.classList.add('hidden'));
+    document.querySelectorAll('[id^="tab-"]').forEach(el=>el.classList.remove('tab-active'));
+    document.getElementById(`content-${tab}`)?.classList.remove('hidden');
+    document.getElementById(`tab-${tab}`)?.classList.add('tab-active');
+    try{
+      if(tab==='equipo')         loadEquipoTable();
+      if(tab==='disponibilidad') loadDisponibilidadTable();
+      if(tab==='convocatoria'){  poblarSelectorPartidos(); loadJornadaConvocatoria(); }
+      if(tab==='estadisticas')   loadEstadisticas();
+    }catch(e){ console.error('showTab',e); }
+  }
+
+  // ============================================================
+  // GESTIÓN DE PARTIDOS
+  // ============================================================
+  function addPartido(){
+    const comp   =document.getElementById('nuevo-partido-comp').value;
+    const tipo   =document.getElementById('nuevo-partido-tipo').value;
+    const label  =(document.getElementById('nuevo-partido-label').value||'').trim();
+    const fecha  =document.getElementById('nuevo-partido-fecha').value||null;
+    const rival  =(document.getElementById('nuevo-partido-rival').value||'').trim()||null;
+    const loc    =document.getElementById('nuevo-partido-loc').value||null;
+    if(!label){ alert('Escribe un nombre para el partido (ej: "Jornada 3" o "Copa - Octavos")'); return; }
+    const p={ id:genId(comp), tipo, label, fecha, rival, localidad:loc };
+    if(!partidos[comp]) partidos[comp]=[];
+    partidos[comp].push(p);
+    syncPartidos();
+    cacheSave();
+    // Limpiar form
+    document.getElementById('nuevo-partido-label').value='';
+    document.getElementById('nuevo-partido-fecha').value='';
+    document.getElementById('nuevo-partido-rival').value='';
+    document.getElementById('nuevo-partido-loc').value='';
+    renderListaPartidos();
+    poblarSelectorPartidos();
+  }
+
+  function eliminarPartido(comp, id){
+    const p=getPartidoById(comp,id);
+    if(!p) return;
+    if(!confirm(`¿Eliminar "${p.label}"?\nSe borrarán también su disponibilidad y convocatoria.`)) return;
+    partidos[comp]=partidos[comp].filter(x=>x.id!==id);
+    if(data.disponibilidad[comp]) delete data.disponibilidad[comp][id];
+    if(data.convocatorias[comp])  delete data.convocatorias[comp][id];
+    // Guardar array vacío explícitamente si no quedan partidos (evita que Firebase devuelva null sin actualizar)
+    syncPartidos();
+    syncToFirebase('data/disponibilidad', data.disponibilidad);
+    syncToFirebase('data/convocatorias',  data.convocatorias);
+    cacheSave();
+    // Actualizar UI inmediatamente sin esperar Firebase
+    renderListaPartidos();
+    poblarSelectorPartidos();
+    if(activeTab()==='disponibilidad') loadDisponibilidadTable();
+    if(activeTab()==='convocatoria') loadJornadaConvocatoria();
+  }
+
+  function savePartidoField(comp, id, field, value){
+    const p=getPartidoById(comp,id);
+    if(!p) return;
+    p[field]=value||null;
+    syncPartidos();
+    cacheSave();
+    // Si cambió la fecha o el label, re-renderizar la lista (reordena por fecha)
+    if(field==='fecha'||field==='label'||field==='rival'||field==='localidad'){
+      if(document.getElementById('partidos-wrapper')&&!document.getElementById('partidos-wrapper').classList.contains('hidden')){
+        renderListaPartidos();
+      }
+    }
+    poblarSelectorPartidos();
+    if(activeTab()==='disponibilidad') loadDisponibilidadTable();
+    if(activeTab()==='convocatoria'&&getCurrentPartidoId()===id) actualizarFichaJornada();
+  }
+
+  function renderListaPartidos(){
+    ['Liga Vasca','Series'].forEach(comp=>{
+      const key=comp==='Liga Vasca'?'lv':'series';
+      const cont=document.getElementById(`lista-partidos-${key}`); if(!cont) return;
+      const lista=getPartidosComp(comp);
+      if(!lista.length){ cont.innerHTML='<p class="text-sm text-gray-400 italic">Sin partidos. Añade el primero arriba.</p>'; return; }
+      cont.innerHTML='';
+      lista.forEach(p=>{
+        const cssClass=getTipoCss(comp,p.tipo);
+        const fechaStr=p.fecha?new Date(p.fecha+'T12:00:00').toLocaleDateString('es-ES',{day:'2-digit',month:'short'}):'Sin fecha';
+        const row=document.createElement('div');
+        row.className='partido-row flex items-start gap-2 p-2 rounded bg-gray-50 mb-1';
+        row.innerHTML=`
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-1 flex-wrap">
+              <span class="tipo-badge ${cssClass}">${p.tipo}</span>
+              <input type="text" value="${(p.label||'').replace(/"/g,'&quot;')}" placeholder="Nombre..."
+                class="font-semibold text-sm border-0 bg-transparent focus:bg-white focus:border focus:px-1 rounded outline-none flex-1 min-w-0"
+                onblur="savePartidoField('${comp}','${p.id}','label',this.value)"
+                oninput=""/>
+            </div>
+            <div class="flex flex-wrap items-center gap-2 mt-1">
+              <input type="date" value="${p.fecha||''}" class="text-xs border rounded px-1 py-0.5"
+                onchange="savePartidoField('${comp}','${p.id}','fecha',this.value)"/>
+              <input type="text" value="${(p.rival||'').replace(/"/g,'&quot;')}" placeholder="Rival..."
+                class="text-xs border rounded px-1 py-0.5 w-28"
+                onblur="savePartidoField('${comp}','${p.id}','rival',this.value)"
+                oninput=""/>
+              <select class="text-xs border rounded px-1 py-0.5"
+                onchange="savePartidoField('${comp}','${p.id}','localidad',this.value)">
+                <option value="" ${!p.localidad?'selected':''}>—</option>
+                <option value="Casa" ${p.localidad==='Casa'?'selected':''}>🏠</option>
+                <option value="Fuera" ${p.localidad==='Fuera'?'selected':''}>🚌</option>
+              </select>
+              <span class="text-xs text-gray-400">${fechaStr}</span>
+            </div>
+          </div>
+          <button onclick="eliminarPartido('${comp}','${p.id}')" class="text-red-400 hover:text-red-600 text-xs mt-1 flex-shrink-0" title="Eliminar">✕</button>`;
+        cont.appendChild(row);
+      });
+    });
+  }
+
+  // ============================================================
+  // EQUIPO
+  // ============================================================
+  let editingPlayerIndex=null;
+
+  function loadEquipoTable(){
+    const tbody=document.getElementById('equipo-tbody'); tbody.innerHTML='';
+    const helper=document.getElementById('load-initial-helper');
+    if(!players||!players.length){ helper?.classList.remove('hidden'); wireEquipoSettingsUI(); return; }
+    helper?.classList.add('hidden');
+    players.forEach((p,i)=>{
+      const full=getPlayerFullName(p);
+      const ptsLV=(ranking?.['Liga Vasca']?.[full])||0;
+      const ptsSe=(ranking?.['Series']?.[full])||0;
+      const tr=document.createElement('tr'); tr.className='border-b hover:bg-gray-50';
+      tr.innerHTML=`<td class="px-4 py-3 font-medium text-sm">${p?.nombre||''} ${p?.apellidos||''}</td>
+        <td class="px-2 py-2 text-center"><input type="number" min="0" step="1" value="${ptsLV}" class="w-20 px-2 py-1 border rounded text-sm text-right ranking-input" data-full="${full.replace(/"/g,'&quot;')}" data-comp="Liga Vasca"/></td>
+        <td class="px-2 py-2 text-center"><input type="number" min="0" step="1" value="${ptsSe}" class="w-20 px-2 py-1 border rounded text-sm text-right ranking-input" data-full="${full.replace(/"/g,'&quot;')}" data-comp="Series"/></td>
+        <td class="px-4 py-3 text-center whitespace-nowrap">
+          <button class="btn-edit bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm font-semibold mr-2" data-index="${i}">✏️</button>
+          <button class="btn-remove bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm font-semibold" data-index="${i}">🗑️</button>
+        </td>`;
+      tbody.appendChild(tr);
+    });
+    tbody.onclick=(e)=>{ const btn=e.target.closest('button'); if(!btn) return; const idx=+btn.dataset.index; if(btn.classList.contains('btn-edit')) editPlayer(idx); else if(btn.classList.contains('btn-remove')) removePlayer(idx); };
+    tbody.querySelectorAll('.ranking-input').forEach(inp=>{ inp.oninput=()=>{ const c=inp.dataset.comp,f=inp.dataset.full; if(!ranking[c]) ranking[c]={}; ranking[c][f]=+inp.value||0; syncToFirebase('ranking',ranking); cacheSave(); if(activeTab()==='convocatoria') calcularOrdenPistas(); }; });
+    wireEquipoSettingsUI();
+  }
+
+  function wireEquipoSettingsUI(){
+    const chkLV=document.getElementById('chk-lv'), chkSe=document.getElementById('chk-series');
+    const btnP=document.getElementById('btn-toggle-partidos'), pw=document.getElementById('partidos-wrapper');
+    if(!chkLV||!chkSe) return;
+    chkLV.checked=!!settings.competitions['Liga Vasca'];
+    chkSe.checked=!!settings.competitions['Series'];
+    chkLV.onchange=()=>{ settings.competitions['Liga Vasca']=chkLV.checked; if(!settings.competitions['Liga Vasca']&&!settings.competitions['Series']){ settings.competitions['Liga Vasca']=true; chkLV.checked=true; } syncToFirebase('settings/competitions',settings.competitions); cacheSave(); applyCompetitionFilterToUI(true); };
+    chkSe.onchange=()=>{ settings.competitions['Series']=chkSe.checked; if(!settings.competitions['Liga Vasca']&&!settings.competitions['Series']){ settings.competitions['Series']=true; chkSe.checked=true; } syncToFirebase('settings/competitions',settings.competitions); cacheSave(); applyCompetitionFilterToUI(true); };
+    if(btnP&&!btnP._wired){ btnP.onclick=()=>{ pw.classList.toggle('hidden'); if(!pw.classList.contains('hidden')){ renderTipoSelector(); renderListaPartidos(); } }; btnP._wired=true; }
+  }
+
+  function addPlayer(){ const n=(document.getElementById('nuevo-nombre')?.value||'').trim(); const a=(document.getElementById('nuevo-apellidos')?.value||'').trim(); if(!n||!a){ alert('Completa nombre y apellidos'); return; } players.push({nombre:n,apellidos:a}); syncToFirebase('players',players.reduce((acc,p,i)=>{acc[i]=p;return acc;},{})); cacheSave(); document.getElementById('nuevo-nombre').value=''; document.getElementById('nuevo-apellidos').value=''; loadEquipoTable(); }
+  function editPlayer(i){ editingPlayerIndex=i; const p=players[i]; document.getElementById('edit-nombre').value=p?.nombre||''; document.getElementById('edit-apellidos').value=p?.apellidos||''; document.getElementById('edit-modal').classList.remove('hidden'); }
+  function saveEdit(){
+    if(editingPlayerIndex===null) return;
+    const n=(document.getElementById('edit-nombre')?.value||'').trim(), a=(document.getElementById('edit-apellidos')?.value||'').trim();
+    if(!n||!a){ alert('Completa nombre y apellidos'); return; }
+    const oldFull=getPlayerFullName(players[editingPlayerIndex]);
+    players[editingPlayerIndex]={nombre:n,apellidos:a};
+    const newFull=`${n} ${a}`;
+    ['Liga Vasca','Series'].forEach(comp=>{
+      // Actualizar disponibilidad
+      Object.keys(data.disponibilidad[comp]||{}).forEach(pid=>{
+        const d=data.disponibilidad[comp][pid];
+        if(d&&d[oldFull]!==undefined){ d[newFull]=d[oldFull]; delete d[oldFull]; }
+      });
+      // Actualizar convocatorias
+      Object.keys(data.convocatorias[comp]||{}).forEach(pid=>{
+        const cv=data.convocatorias[comp][pid];
+        (cv?.pistas||[]).forEach(par=>{ if(par[0]===oldFull) par[0]=newFull; if(par[1]===oldFull) par[1]=newFull; });
+      });
+    });
+    syncToFirebase('players',players.reduce((acc,p,i)=>{acc[i]=p;return acc;},{}));
+    syncToFirebase('data/disponibilidad',data.disponibilidad);
+    syncToFirebase('data/convocatorias',data.convocatorias);
+    cacheSave(); cancelEdit(); loadEquipoTable();
+  }
+  function cancelEdit(){ editingPlayerIndex=null; document.getElementById('edit-modal').classList.add('hidden'); }
+  function removePlayer(i){
+    const p=players[i];
+    if(!confirm(`¿Eliminar a ${p.nombre} ${p.apellidos}?`)) return;
+    const full=getPlayerFullName(p);
+    players.splice(i,1);
+    ['Liga Vasca','Series'].forEach(comp=>{
+      Object.keys(data.disponibilidad[comp]||{}).forEach(pid=>{ if(data.disponibilidad[comp][pid]?.[full]!==undefined) delete data.disponibilidad[comp][pid][full]; });
+      Object.keys(data.convocatorias[comp]||{}).forEach(pid=>{ const cv=data.convocatorias[comp][pid]; if(cv?.pistas) cv.pistas=cv.pistas.map(par=>par.map(x=>x===full?null:x)); });
+    });
+    syncToFirebase('players',players.reduce((acc,p,i)=>{acc[i]=p;return acc;},{}));
+    syncToFirebase('data/disponibilidad',data.disponibilidad);
+    syncToFirebase('data/convocatorias',data.convocatorias);
+    cacheSave(); loadEquipoTable();
+  }
+
+  function loadInitialPlayers(){
+    const inicial=[ {nombre:"Sergio",apellidos:"Martín Gómez"},{nombre:"Iker",apellidos:"López Etxebarria"},{nombre:"Eneko",apellidos:"Hormaetxea Uriarte"},{nombre:"Javier",apellidos:"Martín Gómez"},{nombre:"Iker",apellidos:"Amorrortu Areitioaurtena"},{nombre:"Lander",apellidos:"Auzokoa Aldekoa"},{nombre:"Aitor",apellidos:"Irusta Begoña"},{nombre:"Aitor",apellidos:"Omaetxebarria Goienetxe"},{nombre:"Eneko",apellidos:"Txopitea Artetxe"},{nombre:"Asier",apellidos:"Musatadi Larreategi"},{nombre:"Josu",apellidos:"Milikua Artola"},{nombre:"Gorka",apellidos:"Aldamiz-Echevarría"},{nombre:"Peru",apellidos:"Eguia Kerexeta"},{nombre:"Aritz",apellidos:"Oleaga Gonzalez"},{nombre:"Alex",apellidos:"Landa Uriarte"},{nombre:"Jon",apellidos:"Orue Bizkarra"},{nombre:"Unai",apellidos:"Arrizabalaga Urkiola"},{nombre:"Mikel",apellidos:"Ugarte Amézaga"},{nombre:"Jon",apellidos:"Azketa Txabarri"},{nombre:"Raul",apellidos:"Agirre Mendia"},{nombre:"Aitor",apellidos:"Urrutia Galdos"},{nombre:"Asier",apellidos:"Arrizubieta Mendia"},{nombre:"Jon",apellidos:"Mugika Aretxabaleta"},{nombre:"Iñigo",apellidos:"Garate Bilbao"},{nombre:"Jokin",apellidos:"Uriarte Artetxe"},{nombre:"Imanol",apellidos:"Arantzamendi Iriondo"},{nombre:"Oscar",apellidos:"Bilbao Larrañaga"},{nombre:"Xabier",apellidos:"Etxaniz Arostegi"} ];
+    inicial.forEach(p=>{ if(!players.find(x=>getPlayerFullName(x)===getPlayerFullName(p))) players.push(p); });
+    syncToFirebase('players',players.reduce((acc,p,i)=>{acc[i]=p;return acc;},{}));
+    cacheSave(); loadEquipoTable();
+  }
+
+  // ============================================================
+  // DISPONIBILIDAD
+  // ============================================================
+  function loadDisponibilidadTable(){
+    const comp=document.getElementById('disp-comp').value;
+    const thead=document.getElementById('disp-thead'), tbody=document.getElementById('disp-tbody');
+    if(!players||!players.length){ thead.innerHTML=''; tbody.innerHTML='<tr><td colspan="30" class="text-center py-4 text-gray-500">No hay jugadores.</td></tr>'; return; }
+    const lista=getPartidosComp(comp);
+    if(!lista.length){ thead.innerHTML=''; tbody.innerHTML='<tr><td class="text-center py-4 text-gray-500">No hay partidos en esta competición. Añádelos en la pestaña Equipo.</td></tr>'; return; }
+    let header=`<tr><th class='px-2 py-3 text-left sticky left-0 bg-emerald-600' style='z-index:6;'>Jugador</th>`;
+    lista.forEach(p=>{
+      const cssClass=getTipoCss(comp,p.tipo);
+      const fechaStr=p.fecha?new Date(p.fecha+'T12:00:00').toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit'}):'';
+      header+=`<th class='px-1 py-2 text-center min-w-16'>
+        <div class='text-white text-xs font-bold'><span class='tipo-badge ${cssClass}' style='font-size:9px'>${p.tipo}</span></div>
+        <div class='text-white text-xs truncate max-w-16' title='${p.label||''}'>${p.label||''}</div>
+        ${fechaStr?`<div class='text-emerald-200 text-xs'>${fechaStr}</div>`:''}
+        <select class='mt-1 w-full px-0.5 py-0.5 border rounded text-xs bg-emerald-50 text-emerald-900' data-bulk='${p.id}'>
+          <option value=''>Todos…</option>
+          <option value='Disponible'>✓ Todos disp.</option>
+          <option value='No Disponible'>✗ Todos no disp.</option>
+          <option value='BORRAR'>— Borrar todos</option>
+        </select></th>`;
+    });
+    header+='</tr>';
+    thead.innerHTML=header;
+    thead.querySelectorAll('select[data-bulk]').forEach(sel=>sel.onchange=()=>bulkSetPartido(sel.dataset.bulk, sel.value, comp));
+    tbody.innerHTML='';
+    players.forEach(p=>{
+      const full=getPlayerFullName(p);
+      const tr=document.createElement('tr'); tr.className='border-b hover:bg-gray-50';
+      let cells=`<td class='px-2 py-2 font-medium text-sm sticky left-0 bg-white' style='z-index:3;'>${getPlayerDisplayName(p)}</td>`;
+      lista.forEach(partido=>{
+        const val=(data.disponibilidad?.[comp]?.[partido.id]?.[full])??null;
+        let cls=val==='Disponible'?'disp-disponible':val==='No Disponible'?'disp-no-disponible':'disp-sin-respuesta';
+        const enc=encodeURIComponent(full);
+        cells+=`<td class='px-1 py-2 text-center'><select id='disp-${partido.id}-${enc}' data-pid='${partido.id}' data-full='${full.replace(/\\/g,'\\\\').replace(/'/g,"\\'")}' class='w-full px-0.5 py-0.5 border rounded text-xs ${cls}'>
+          <option value='' ${val===null?'selected':''}>-</option>
+          <option value='Disponible' ${val==='Disponible'?'selected':''}>✓</option>
+          <option value='No Disponible' ${val==='No Disponible'?'selected':''}>✗</option>
+        </select></td>`;
+      });
+      tr.innerHTML=cells; tbody.appendChild(tr);
+    });
+    tbody.querySelectorAll('select[data-pid]').forEach(sel=>sel.onchange=()=>markDisp(comp, sel.dataset.pid, sel.dataset.full));
+  }
+
+  function bulkSetPartido(pid, value, comp){
+    if(!value) return;
+    const p=getPartidoById(comp,pid);
+    const nombre=p?.label||pid;
+    if(value==='BORRAR'){
+      if(!confirm(`¿Borrar la disponibilidad de TODOS en "${nombre}" (${comp})?`)){ loadDisponibilidadTable(); return; }
+      ensureDispPartido(comp,pid);
+      players.forEach(pl=>{ delete data.disponibilidad[comp][pid][getPlayerFullName(pl)]; });
+    } else {
+      const texto=value==='Disponible'?'Disponible':'No Disponible';
+      if(!confirm(`¿Marcar TODOS como "${texto}" en "${nombre}" (${comp})?`)){ loadDisponibilidadTable(); return; }
+      ensureDispPartido(comp,pid);
+      players.forEach(pl=>{ data.disponibilidad[comp][pid][getPlayerFullName(pl)]=value; });
+    }
+    syncToFirebase('data/disponibilidad',data.disponibilidad); cacheSave(); loadDisponibilidadTable();
+  }
+
+  function markDisp(comp, pid, full){
+    const enc=encodeURIComponent(full);
+    const sel=document.getElementById(`disp-${pid}-${enc}`); if(!sel) return;
+    const val=sel.value||null;
+    ensureDispPartido(comp,pid);
+    data.disponibilidad[comp][pid][full]=val;
+    sel.className='w-full px-0.5 py-0.5 border rounded text-xs '+(val==='Disponible'?'disp-disponible':val==='No Disponible'?'disp-no-disponible':'disp-sin-respuesta');
+    syncToFirebase('data/disponibilidad',data.disponibilidad); cacheSave();
+  }
+
+  // ============================================================
+  // CONVOCATORIA
+  // ============================================================
+  function getCurrentComp(){ return document.getElementById('conv-comp')?.value||'Liga Vasca'; }
+  function getCurrentPartidoId(){ return document.getElementById('conv-partido')?.value||''; }
+
+  function onConvCompChange(){ poblarSelectorPartidos(); loadJornadaConvocatoria(); }
+
+  function poblarSelectorPartidos(){
+    const comp=getCurrentComp();
+    const sel=document.getElementById('conv-partido'); if(!sel) return;
+    const cur=sel.value;
+    sel.innerHTML='<option value="">— Selecciona un partido —</option>';
+    const lista=getPartidosComp(comp);
+    lista.forEach(p=>{
+      const o=document.createElement('option');
+      o.value=p.id;
+      const partes=[];
+      partes.push(p.label||p.id);
+      if(p.tipo) partes.push(p.tipo);
+      if(p.fecha){ const fd=new Date(p.fecha+'T12:00:00'); partes.push(fd.toLocaleDateString('es-ES',{day:'2-digit',month:'short',year:'numeric'})); }
+      if(p.rival) partes.push('vs '+p.rival);
+      o.textContent=partes.join('  ·  ');
+      sel.appendChild(o);
+    });
+    // Si ya había uno seleccionado y sigue existiendo, mantenerlo
+    if(cur && lista.find(p=>p.id===cur)){
+      sel.value=cur;
+      return;
+    }
+    // Si no, seleccionar automáticamente el próximo partido (fecha >= hoy)
+    // o el último pasado si todos ya han pasado
+    const hoy=new Date(); hoy.setHours(0,0,0,0);
+    const conFecha=lista.filter(p=>p.fecha);
+    const proximos=conFecha.filter(p=>new Date(p.fecha+'T00:00:00')>=hoy);
+    if(proximos.length){
+      // El más próximo en el futuro (primero de la lista ordenada)
+      sel.value=proximos[0].id;
+    } else if(conFecha.length){
+      // Todos pasados: seleccionar el más reciente
+      sel.value=conFecha[conFecha.length-1].id;
+    } else if(lista.length){
+      // Sin fechas: seleccionar el primero
+      sel.value=lista[0].id;
+    }
+  }
+
+  function buildPistasIfNeeded(){
+    const cont=document.getElementById('pistas-container');
+    if(cont._delegated) return;
+    const tpl=document.getElementById('pista-template');
+    const info=[{n:1,pts:3,cls:'emerald'},{n:2,pts:3,cls:'emerald'},{n:3,pts:2,cls:'blue'},{n:4,pts:2,cls:'blue'},{n:5,pts:2,cls:'blue'}];
+    info.forEach(x=>{
+      const node=tpl.content.cloneNode(true);
+      const box=node.querySelector('.pista');
+      box.classList.add(`border-${x.cls}-500`,`bg-${x.cls}-50`);
+      box.querySelector('.titulo').textContent=`Pista ${x.n}`;
+      box.querySelector('.puntos-vic').textContent=`Victoria: ${x.pts}pts`;
+      box.querySelector('.resultado').id=`resultado-${x.n}`;
+      box.querySelector('.j1').id=`pista-${x.n}-j1`;
+      box.querySelector('.j2').id=`pista-${x.n}-j2`;
+      cont.appendChild(node);
+    });
+    cont.addEventListener('change',e=>{
+      const sel=e.target; if(!sel?.id) return;
+      if(sel.id.startsWith('resultado-')) autoSaveResultado(+sel.id.split('-')[1]);
+      else if(sel.id.startsWith('pista-'))   autoSavePista(+sel.id.split('-')[1]);
+    });
+    cont._delegated=true;
+  }
+
+  function loadJornadaConvocatoria(){
+    try{
+      buildPistasIfNeeded();
+      const comp=getCurrentComp();
+      const pid=getCurrentPartidoId();
+      if(!pid){ document.getElementById('ficha-jornada').classList.add('hidden'); document.getElementById('available-tbody').innerHTML=''; return; }
+      const partido=getPartidoById(comp,pid);
+      ensureConvPartido(comp,pid);
+      ensureDispPartido(comp,pid);
+
+      disponiblesActuales=players.filter(p=>(data.disponibilidad?.[comp]?.[pid]?.[getPlayerFullName(p)])==='Disponible');
+      const convJ=data.convocatorias[comp][pid];
+      const asignadosSet=new Set();
+      for(let i=0;i<5;i++){ const par=convJ.pistas[i]||[null,null]; if(par[0]) asignadosSet.add(par[0]); if(par[1]) asignadosSet.add(par[1]); }
+
+      // Tabla disponibles
+      const tbody=document.getElementById('available-tbody'); tbody.innerHTML='';
+      const ocultar=document.getElementById('chk-ocultar-conv')?.checked;
+      disponiblesActuales.forEach(p=>{
+        const full=getPlayerFullName(p);
+        const st=calcularEstadisticas(comp, pid, full);
+        const tot=calcularEstadisticasTotalAmbos(comp, pid, full);
+        const isConv=asignadosSet.has(full);
+        if(ocultar&&isConv) return;
+        const badge=isConv?`<span class='badge-conv'>Convocado</span>`:'';
+        const tr=document.createElement('tr'); tr.className='border-b hover:bg-emerald-50';
+        const tD=tot.dispTotal??'—', tJ=tot.jugadosTotal??'—', tG=tot.ganadosTotal??'—';
+        const tRSJ=tot.rachaSinJugarTotal??'—', tRDSJ=tot.rachaDispSinJugarTotal??'—';
+        const ptsJug=getPtsJugador(comp, full);
+        tr.innerHTML=`<td class='px-3 py-2 text-xs md:text-sm'>${getPlayerDisplayName(p)} ${badge}</td>
+          <td class='px-3 py-2 text-center'><span class='pts-ranking'>${ptsJug}</span></td>
+          <td class='px-3 py-2 text-center'>${st.disponible}</td>
+          <td class='px-3 py-2 text-center'>${st.jugados}</td>
+          <td class='px-3 py-2 text-center text-green-600 font-semibold'>${st.ganados}</td>
+          <td class='px-3 py-2 text-center ${getRachaClass(st.rachaSinJugar)} rounded'>${st.rachaSinJugar}</td>
+          <td class='px-3 py-2 text-center ${getRachaClass(st.rachaDispSinJugar)} rounded'>${st.rachaDispSinJugar}</td>
+          <td class='px-3 py-2 text-center text-blue-600'>${tD}</td>
+          <td class='px-3 py-2 text-center text-blue-600'>${tJ}</td>
+          <td class='px-3 py-2 text-center text-blue-700 font-semibold'>${tG}</td>
+          <td class='px-3 py-2 text-center ${tRSJ!=="—"?getRachaClass(tRSJ):""} rounded'>${tRSJ}</td>
+          <td class='px-3 py-2 text-center ${tRDSJ!=="—"?getRachaClass(tRDSJ):""} rounded'>${tRDSJ}</td>`;
+        tbody.appendChild(tr);
+      });
+
+      // Resultados
+      for(let i=1;i<=5;i++){ const el=document.getElementById(`resultado-${i}`); if(el) el.value=convJ.resultados?.[i-1]||''; }
+      loadPistaSelects(comp, pid);
+      calcularResultado();
+      calcularOrdenPistas();
+      actualizarFichaJornada();
+
+      const chk=document.getElementById('chk-ocultar-conv');
+      if(chk&&!chk._wired){ chk.addEventListener('change',loadJornadaConvocatoria); chk._wired=true; }
+    }catch(e){ console.error('loadJornadaConvocatoria',e); }
+  }
+
+  function loadPistaSelects(comp, pid){
+    const convJ=data.convocatorias?.[comp]?.[pid]||{pistas:Array.from({length:5},()=>[null,null])};
+    const asignados=new Set();
+    for(let p=1;p<=5;p++){ const par=convJ.pistas[p-1]||[null,null]; if(par[0]) asignados.add(par[0]); if(par[1]) asignados.add(par[1]); }
+    for(let p=1;p<=5;p++){
+      ['j1','j2'].forEach((side,si)=>{
+        const sel=document.getElementById(`pista-${p}-${side}`); if(!sel) return;
+        const current=(convJ.pistas?.[p-1]?.[si])||'';
+        sel.innerHTML='<option value="">Jugador...</option>';
+        if(current&&!disponiblesActuales.some(pl=>getPlayerFullName(pl)===current)){
+          const pl=findPlayerByFullName(current);
+          const opt=document.createElement('option'); opt.value=current;
+          const ptsNd=getPtsJugador(comp, current);
+          opt.textContent=(pl?getPlayerDisplayName(pl):current)+` (${ptsNd}pts) (no disp.)`;
+          sel.appendChild(opt);
+        }
+        const bloq=new Set(asignados); if(current) bloq.delete(current);
+        disponiblesActuales.forEach(pl=>{ const full=getPlayerFullName(pl); if(!bloq.has(full)){ const opt=document.createElement('option'); opt.value=full; const pts=getPtsJugador(comp,full); opt.textContent=`${getPlayerDisplayName(pl)} (${pts}pts)`; sel.appendChild(opt); } });
+        sel.value=current||'';
+      });
+    }
+  }
+
+  function refreshAvailableTbody(){ loadJornadaConvocatoria(); }
+
+  function autoSavePista(pistaNum){
+    const comp=getCurrentComp(), pid=getCurrentPartidoId(); if(!pid) return;
+    const j1=document.getElementById(`pista-${pistaNum}-j1`).value||null;
+    const j2=document.getElementById(`pista-${pistaNum}-j2`).value||null;
+    if(j1&&j2&&j1===j2){ alert('No puedes repetir jugador en la misma pista'); document.getElementById(`pista-${pistaNum}-j2`).value=''; return; }
+    ensureConvPartido(comp,pid);
+    for(let p=1;p<=5;p++){ const a=document.getElementById(`pista-${p}-j1`)?.value||null; const b=document.getElementById(`pista-${p}-j2`)?.value||null; data.convocatorias[comp][pid].pistas[p-1]=[a,b]; }
+    autoOrdenarPistas(comp,pid);
+    syncToFirebase('data/convocatorias',data.convocatorias); cacheSave(); loadJornadaConvocatoria();
+  }
+
+  function autoSaveResultado(pistaNum){
+    const comp=getCurrentComp(), pid=getCurrentPartidoId(); if(!pid) return;
+    const val=document.getElementById(`resultado-${pistaNum}`).value||null;
+    ensureConvPartido(comp,pid);
+    data.convocatorias[comp][pid].resultados[pistaNum-1]=val;
+    syncToFirebase('data/convocatorias',data.convocatorias); cacheSave(); calcularResultado(); refreshAvailableTbody();
+  }
+
+  function calcularResultado(){
+    let f=0,c=0;
+    for(let i=1;i<=5;i++){ const r=document.getElementById(`resultado-${i}`)?.value; const pts=i<=2?3:2; if(r==='G') f+=pts; else if(r==='P') c+=pts; }
+    document.getElementById('resultado-favor').textContent=f;
+    document.getElementById('resultado-contra').textContent=c;
+  }
+
+  // Ordenación automática de pistas
+  function getPtsJugador(comp, full){ return (ranking?.[comp]?.[full])||0; }
+
+  function partidoBloqueado(comp, pid){
+    const p=getPartidoById(comp,pid);
+    if(p?.fecha){ const f=new Date(p.fecha+'T23:59:59'); if(f<new Date()) return true; }
+    return false;
+  }
+
+  function autoOrdenarPistas(comp, pid){
+    if(partidoBloqueado(comp,pid)) return;
+    const cv=data.convocatorias[comp][pid];
+    const slots=Array.from({length:5},(_,i)=>{
+      const par=cv.pistas[i]??[null,null];
+      const j1=Array.isArray(par)?par[0]:(par['0']||null);
+      const j2=Array.isArray(par)?par[1]:(par['1']||null);
+      const res=cv.resultados[i]??cv.resultados[String(i)]??null;
+      const suma=(j1&&j2)?getPtsJugador(comp,j1)+getPtsJugador(comp,j2):null;
+      return {j1,j2,res,suma};
+    });
+    const completas=slots.filter(s=>s.suma!==null).sort((a,b)=>b.suma-a.suma);
+    const incompletas=slots.filter(s=>s.suma===null);
+    const ord=[...completas,...incompletas];
+    cv.pistas=ord.map(s=>[s.j1,s.j2]);
+    cv.resultados=ord.map(s=>s.res);
+  }
+
+  function forzarOrdenPistas(){
+    const comp=getCurrentComp(), pid=getCurrentPartidoId(); if(!pid) return;
+    ensureConvPartido(comp,pid);
+    const cv=data.convocatorias[comp][pid];
+    for(let p=1;p<=5;p++){ const a=document.getElementById(`pista-${p}-j1`)?.value||null; const b=document.getElementById(`pista-${p}-j2`)?.value||null; cv.pistas[p-1]=[a,b]; }
+    const slots=Array.from({length:5},(_,i)=>{ const par=cv.pistas[i]??[null,null]; const j1=Array.isArray(par)?par[0]:null; const j2=Array.isArray(par)?par[1]:null; const res=cv.resultados[i]??null; const suma=(j1&&j2)?getPtsJugador(comp,j1)+getPtsJugador(comp,j2):null; return {j1,j2,res,suma}; });
+    const ord=[...slots.filter(s=>s.suma!==null).sort((a,b)=>b.suma-a.suma),...slots.filter(s=>s.suma===null)];
+    cv.pistas=ord.map(s=>[s.j1,s.j2]); cv.resultados=ord.map(s=>s.res);
+    syncToFirebase('data/convocatorias',data.convocatorias); cacheSave(); loadJornadaConvocatoria();
+  }
+
+  function calcularOrdenPistas(){
+    const comp=getCurrentComp();
+    const sumas=[];
+    for(let i=1;i<=5;i++){
+      const j1=document.getElementById(`pista-${i}-j1`)?.value||'';
+      const j2=document.getElementById(`pista-${i}-j2`)?.value||'';
+      const pts1=j1?getPtsJugador(comp,j1):null, pts2=j2?getPtsJugador(comp,j2):null;
+      sumas.push((pts1!==null&&pts2!==null)?pts1+pts2:null);
+    }
+    const cont=document.getElementById('pistas-container'); if(!cont) return;
+    const divs=cont.querySelectorAll('.pista');
+    const errores=[], estados=Array(5).fill('ok');
+    divs.forEach((div,i)=>{ const sb=div.querySelector('.suma-pts'); if(sumas[i]!==null){ sb.textContent=`Pareja: ${sumas[i]}pts`; sb.classList.remove('hidden'); } else sb.classList.add('hidden'); });
+    for(let i=0;i<4;i++){ if(sumas[i]===null||sumas[i+1]===null) continue; if(sumas[i]<sumas[i+1]){ estados[i]='error'; estados[i+1]='error'; errores.push(`Pista ${i+1} (${sumas[i]}pts) < Pista ${i+2} (${sumas[i+1]}pts)`); } }
+    divs.forEach((div,i)=>{
+      div.classList.remove('pista-ok','pista-error');
+      const badge=div.querySelector('.orden-badge');
+      badge.classList.remove('hidden','orden-ok','orden-error');
+      if(sumas[i]!==null){ if(estados[i]==='error'){ div.classList.add('pista-error'); badge.classList.remove('hidden'); badge.classList.add('orden-error'); badge.textContent='⚠️ Orden incorrecto'; } else { div.classList.add('pista-ok'); badge.classList.remove('hidden'); badge.classList.add('orden-ok'); badge.textContent='✓ Correcto'; } }
+    });
+    const res=document.getElementById('orden-pistas-resumen'); if(!res) return;
+    if(!sumas.some(s=>s!==null)){ res.classList.add('hidden'); return; }
+    res.classList.remove('hidden');
+    res.className='mb-3 p-3 rounded-lg border text-sm '+(errores.length?'bg-red-50 border-red-300 text-red-800':'bg-green-50 border-green-300 text-green-800');
+    res.innerHTML=errores.length?`⚠️ <strong>Orden incorrecto:</strong> ${errores.join(' · ')}`:'✅ <strong>Orden correcto</strong> según puntos de ranking.';
+  }
+
+  function actualizarFichaJornada(){
+    const comp=getCurrentComp(), pid=getCurrentPartidoId();
+    const ficha=document.getElementById('ficha-jornada'); if(!ficha) return;
+    if(!pid){ ficha.classList.add('hidden'); return; }
+    const p=getPartidoById(comp,pid);
+    if(!p||(!p.fecha&&!p.rival&&!p.localidad)){ ficha.classList.add('hidden'); return; }
+    ficha.classList.remove('hidden');
+    // Título del partido
+    let tituloEl=document.getElementById('ficha-titulo');
+    if(!tituloEl){ tituloEl=document.createElement('div'); tituloEl.id='ficha-titulo'; tituloEl.className='font-bold text-emerald-900 text-base mb-2'; ficha.insertBefore(tituloEl,ficha.firstChild); }
+    const tipoCss=getTipoCss(comp,p.tipo);
+    tituloEl.innerHTML=`<span class='tipo-badge ${tipoCss} mr-2'>${p.tipo}</span>${p.label||''}`;
+    const fechaEl=document.getElementById('ficha-fecha');
+    if(fechaEl) fechaEl.textContent=p.fecha?new Date(p.fecha+'T12:00:00').toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long',year:'numeric'}):'Sin fecha';
+    const rivalEl=document.getElementById('ficha-rival');
+    if(rivalEl) rivalEl.textContent=p.rival||'—';
+    const locEl=document.getElementById('ficha-localidad');
+    if(locEl){ if(p.localidad==='Casa') locEl.innerHTML=`<span class='badge-casa'>🏠 Casa</span>`; else if(p.localidad==='Fuera') locEl.innerHTML=`<span class='badge-fuera'>🚌 Fuera</span>`; else locEl.innerHTML=''; }
+  }
+
+  // ============================================================
+  // ESTADÍSTICAS
+  // ============================================================
+  function calcularEstadisticas(comp, pid, full){
+    let disp=0,jug=0,gan=0,rSJ=0,rDSJ=0;
+    const partido=getPartidoById(comp,pid);
+    const fechaRef=partido?.fecha?new Date(partido.fecha+'T23:59:59'):null;
+    const lista=getPartidosComp(comp);
+    lista.forEach(p=>{
+      // Excluir siempre el partido actual — todas las estadísticas son del histórico previo
+      if(p.id===pid) return;
+      const f=p.fecha?new Date(p.fecha+'T23:59:59'):null;
+      // Incluir solo partidos anteriores (estrictamente) al actual
+      const incluir=fechaRef?(f&&f<fechaRef):true;
+      if(!incluir) return;
+      const d=(data.disponibilidad?.[comp]?.[p.id]?.[full])??null;
+      if(d==='Disponible') disp++;
+      const cv=data.convocatorias?.[comp]?.[p.id];
+      let jugo=false;
+      if(cv?.pistas){ for(let i=0;i<5;i++){ const par=cv.pistas[i]||[null,null]; if(par[0]===full||par[1]===full){ jugo=true; jug++; if(cv.resultados?.[i]==='G') gan++; break; } } }
+      if(jugo){ rSJ=0; rDSJ=0; } else { rSJ++; if(d==='Disponible') rDSJ++; }
+    });
+    return {disponible:disp,jugados:jug,ganados:gan,rachaSinJugar:rSJ,rachaDispSinJugar:rDSJ};
+  }
+
+  function calcularEstadisticasTotalAmbos(compActual, pidActual, full){
+    const soloUnaComp = !settings.competitions['Liga Vasca'] || !settings.competitions['Series'];
+    const partidoRef=getPartidoById(compActual,pidActual);
+    // Si no hay fecha de referencia o solo hay una competición activa, no calcular totales
+    if(!partidoRef?.fecha||soloUnaComp) return {dispTotal:null,jugadosTotal:null,ganadosTotal:null,rachaSinJugarTotal:null,rachaDispSinJugarTotal:null};
+    const fechaRef=new Date(partidoRef.fecha+'T23:59:59');
+    const eventos=[];
+    ['Liga Vasca','Series'].forEach(c=>{
+      getPartidosComp(c).forEach(p=>{
+        if(p.fecha){
+          const f=new Date(p.fecha+'T23:59:59');
+          // Solo partidos ANTERIORES (estrictamente) al actual para las rachas
+          if(f<fechaRef) eventos.push({comp:c,pid:p.id,fecha:f});
+        }
+      });
+    });
+    eventos.sort((a,b)=>a.fecha-b.fecha);
+    let disp=0,jug=0,gan=0,rSJ=0,rDSJ=0;
+    for(const ev of eventos){
+      const d=(data.disponibilidad?.[ev.comp]?.[ev.pid]?.[full])??null;
+      if(d==='Disponible') disp++;
+      const cv=data.convocatorias?.[ev.comp]?.[ev.pid];
+      let jugo=false;
+      if(cv?.pistas){ for(let i=0;i<5;i++){ const par=cv.pistas[i]||[null,null]; if(par[0]===full||par[1]===full){ jugo=true; jug++; if(cv.resultados?.[i]==='G') gan++; break; } } }
+      if(jugo){ rSJ=0; rDSJ=0; } else { rSJ++; if(d==='Disponible') rDSJ++; }
+    }
+    return {dispTotal:disp,jugadosTotal:jug,ganadosTotal:gan,rachaSinJugarTotal:rSJ,rachaDispSinJugarTotal:rDSJ};
+  }
+
+  function getRachaClass(r){ if(r===0) return 'racha-0'; if(r===1) return 'racha-1'; if(r===2) return 'racha-2'; if(r===3) return 'racha-3'; if(r===4) return 'racha-4'; return 'racha-5-plus'; }
+
+  function loadEstadisticas(){
+    const comp=document.getElementById('stats-comp').value;
+    const tbody=document.getElementById('stats-tbody'); tbody.innerHTML='';
+    players.forEach(p=>{
+      const full=getPlayerFullName(p);
+      let disp=0,noDisp=0,sinR=0,jug=0,gan=0;
+      const comps=comp==='total'?['Liga Vasca','Series']:[comp];
+      comps.forEach(c=>{
+        getPartidosComp(c).forEach(partido=>{
+          const d=(data.disponibilidad?.[c]?.[partido.id]?.[full])??null;
+          if(d==='Disponible') disp++; else if(d==='No Disponible') noDisp++; else sinR++;
+          const cv=data.convocatorias?.[c]?.[partido.id];
+          if(cv?.pistas){ for(let i=0;i<5;i++){ const par=cv.pistas[i]||[null,null]; if(par[0]===full||par[1]===full){ jug++; if(cv.resultados?.[i]==='G') gan++; break; } } }
+        });
+      });
+      const wr=jug>0?Math.round(gan/jug*100):0;
+      const tr=document.createElement('tr'); tr.className='border-b hover:bg-gray-50';
+      tr.innerHTML=`<td class='px-3 py-3 text-sm font-medium'>${getPlayerDisplayName(p)}</td>
+        <td class='px-3 py-3 text-center text-emerald-600 font-semibold'>${disp}</td>
+        <td class='px-3 py-3 text-center text-red-600'>${noDisp}</td>
+        <td class='px-3 py-3 text-center text-gray-400'>${sinR}</td>
+        <td class='px-3 py-3 text-center font-semibold'>${jug}</td>
+        <td class='px-3 py-3 text-center text-green-600 font-bold'>${gan}</td>
+        <td class='px-3 py-3 text-center'><span class='px-2 py-1 rounded text-xs font-semibold ${wr>=50?'bg-green-100 text-green-700':'bg-gray-100'}'>${wr}%</span></td>`;
+      tbody.appendChild(tr);
+    });
+  }
+
+  // ============================================================
+  // BOOT
+  // ============================================================
+  document.addEventListener('DOMContentLoaded', ()=>{ try{ init(); } catch(e){ console.error('init failed',e); showTab('equipo'); } });
+  </script>
+</body>
+</html>
